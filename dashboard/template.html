@@ -1,0 +1,1106 @@
+<title>twiauto Fleet Status</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+JP:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #f6f5f1;
+    --surface: #ffffff;
+    --surface-2: #edece5;
+    --border: #ddd9cf;
+    --text: #23221e;
+    --text-muted: #6e6a60;
+    --accent: #2c6e6b;
+    --accent-soft: #dcebe9;
+    --ok: #2f8f5b;
+    --ok-soft: #e2f2e8;
+    --warn: #a9781b;
+    --warn-soft: #f6ecd4;
+    --susp: #b8532b;
+    --susp-soft: #f7e2d5;
+    --crit: #ab3838;
+    --crit-soft: #f6dede;
+    --shadow: 0 1px 2px rgba(30,28,20,0.06), 0 4px 16px rgba(30,28,20,0.05);
+    --font-display: 'Sora', 'IBM Plex Sans JP', sans-serif;
+    --font-body: 'IBM Plex Sans', 'IBM Plex Sans JP', sans-serif;
+    --font-mono: 'IBM Plex Mono', 'SFMono-Regular', monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14161a;
+      --surface: #1b1e22;
+      --surface-2: #22262b;
+      --border: #2d3137;
+      --text: #e8e7e2;
+      --text-muted: #9aa0a6;
+      --accent: #63b8b2;
+      --accent-soft: rgba(99,184,178,0.14);
+      --ok: #4dbf83;
+      --ok-soft: rgba(77,191,131,0.13);
+      --warn: #d7a53f;
+      --warn-soft: rgba(215,165,63,0.14);
+      --susp: #e2764a;
+      --susp-soft: rgba(226,118,74,0.14);
+      --crit: #e2605f;
+      --crit-soft: rgba(226,96,95,0.14);
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14161a;
+    --surface: #1b1e22;
+    --surface-2: #22262b;
+    --border: #2d3137;
+    --text: #e8e7e2;
+    --text-muted: #9aa0a6;
+    --accent: #63b8b2;
+    --accent-soft: rgba(99,184,178,0.14);
+    --ok: #4dbf83;
+    --ok-soft: rgba(77,191,131,0.13);
+    --warn: #d7a53f;
+    --warn-soft: rgba(215,165,63,0.14);
+    --susp: #e2764a;
+    --susp-soft: rgba(226,118,74,0.14);
+    --crit: #e2605f;
+    --crit-soft: rgba(226,96,95,0.14);
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 28px 24px 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* header */
+  .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .head h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 26px;
+    letter-spacing: -0.01em;
+    margin: 0 0 4px;
+    text-wrap: balance;
+  }
+  .head .sub {
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+  .head .meta {
+    text-align: right;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .head .meta strong { color: var(--text); font-family: var(--font-mono); font-weight: 500; }
+  .head .meta .status-line { margin-top: 3px; }
+  .head .meta .status-line.ok { color: var(--ok); }
+  .head .meta .status-line.warn { color: var(--warn); }
+
+  /* status banner */
+  .banner {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--warn-soft);
+    border: 1px solid var(--warn);
+    border-radius: 10px;
+    padding: 14px 18px;
+    flex-wrap: wrap;
+  }
+  .banner.crit { background: var(--susp-soft); border-color: var(--susp); }
+  .banner .icon { font-size: 20px; line-height: 1; }
+  .banner .msg { flex: 1 1 320px; font-size: 13px; color: var(--text); }
+  .banner .msg .req-note { display: block; margin-top: 3px; font-size: 11.5px; color: var(--text-muted); }
+  .banner button {
+    background: var(--warn);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 16px;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity .12s ease;
+  }
+  .banner.crit button { background: var(--susp); }
+  .banner button:hover { opacity: .88; }
+  .banner button:disabled { opacity: .55; cursor: default; }
+
+  /* KPI row */
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+  }
+  .kpi {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--kpi-c, var(--accent));
+    border-radius: 10px;
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .kpi:hover { transform: translateY(-1px); }
+  .kpi.active { outline: 2px solid var(--kpi-c, var(--accent)); outline-offset: -1px; }
+  .kpi .num {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  .kpi .lbl { margin-top: 4px; font-size: 12px; color: var(--text-muted); }
+
+  /* distribution bar */
+  .dist {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .dist .titlerow { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .dist .title { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
+  .dist .titlerow-right { display: flex; align-items: center; gap: 10px; }
+  .dist .sb-req-note { font-size: 11.5px; color: var(--text-muted); }
+  .dist-bar { display: flex; width: 100%; height: 10px; border-radius: 999px; overflow: hidden; background: var(--surface-2); }
+  .dist-bar span { height: 100%; }
+  .dist-legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--text-muted); }
+  .dist-legend .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+
+  /* toolbar */
+  .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .toolbar input[type="search"] {
+    flex: 1 1 220px; min-width: 180px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 9px 12px; color: var(--text); font-family: var(--font-body); font-size: 13px;
+  }
+  .toolbar input[type="search"]:focus, select:focus, .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .toolbar select {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 9px 10px; color: var(--text); font-family: var(--font-body); font-size: 13px;
+  }
+  .toolbar .reset {
+    background: transparent; border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 12px; color: var(--text-muted); font-size: 12px; cursor: pointer;
+  }
+  .toolbar .reset:hover { color: var(--text); border-color: var(--text-muted); }
+
+  /* table */
+  .table-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); overflow: hidden; }
+  .table-scroll { overflow-x: auto; max-height: 620px; overflow-y: auto; }
+  table { border-collapse: collapse; width: 100%; min-width: 880px; }
+  thead th {
+    position: sticky; top: 0; background: var(--surface-2); text-align: left;
+    font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted);
+    padding: 10px 14px; border-bottom: 1px solid var(--border); cursor: pointer; white-space: nowrap; user-select: none;
+  }
+  thead th .arrow { opacity: .35; margin-left: 4px; font-size: 10px; }
+  thead th.sorted .arrow { opacity: 1; color: var(--accent); }
+  tbody td { padding: 9px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tbody tr:hover td { background: var(--surface-2); }
+  tbody tr:last-child td { border-bottom: none; }
+  .handle { font-family: var(--font-mono); font-size: 12.5px; }
+  .handle a { color: var(--text); text-decoration: none; }
+  .handle a:hover { color: var(--accent); text-decoration: underline; }
+  .muted { color: var(--text-muted); font-size: 12.5px; }
+  .sysname { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-muted); white-space: nowrap; }
+  .checked-at { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-muted); white-space: nowrap; }
+
+  /* X(Twitter)関連の指標列を他の列と区別するための背景色 */
+  .xcol { background: var(--accent-soft); }
+  thead th.xcol { background: var(--accent-soft); }
+  tbody tr:hover td.xcol { background: var(--accent-soft); }
+
+  .pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 500; white-space: nowrap; }
+  .pill .stripe { width: 6px; height: 6px; border-radius: 50%; }
+  .pill.ok { background: var(--ok-soft); color: var(--ok); }
+  .pill.ok .stripe { background: var(--ok); }
+  .pill.warn { background: var(--warn-soft); color: var(--warn); }
+  .pill.warn .stripe { background: var(--warn); }
+  .pill.susp { background: var(--susp-soft); color: var(--susp); }
+  .pill.susp .stripe { background: var(--susp); }
+  .pill.crit { background: var(--crit-soft); color: var(--crit); }
+  .pill.crit .stripe { background: var(--crit); }
+
+  .detail-row td { padding: 0 14px 12px; border-bottom: 1px solid var(--border); }
+  .detail-row.hidden-row { display: none; }
+  .detail-box { background: var(--surface-2); border-radius: 8px; padding: 10px 12px; font-size: 12.5px; color: var(--text-muted); }
+  tr.clickable { cursor: pointer; }
+
+  .empty-row td { text-align: center; padding: 40px 14px; color: var(--text-muted); font-size: 13px; }
+  .count-note { font-size: 12px; color: var(--text-muted); }
+  .count-note strong { color: var(--text); font-family: var(--font-mono); }
+
+  @media (max-width: 860px) { .kpis { grid-template-columns: repeat(2, 1fr); } }
+  @media (prefers-reduced-motion: reduce) { .kpi, .banner button { transition: none; } }
+
+  /* mail alerts panel */
+  .mailcard {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .mailcard .mailhead {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .mailcard .mailhead h2 {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .mailcard .mailmeta {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .mailcard .mailmeta strong { color: var(--text); font-family: var(--font-mono); font-weight: 500; }
+  .mailhead-right { display: flex; align-items: center; gap: 12px; }
+  .refresh-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color .12s ease, color .12s ease;
+  }
+  .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .refresh-btn:disabled { opacity: .55; cursor: default; border-color: var(--border); color: var(--text-muted); }
+  .refresh-icon { display: inline-block; font-size: 13px; line-height: 1; }
+  .refresh-btn.spinning .refresh-icon { animation: spin 0.8s linear infinite; }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .refresh-btn.spinning .refresh-icon { animation: none; } }
+  .mail-req-note { font-size: 11.5px; color: var(--text-muted); margin-top: -4px; }
+  .maillist { display: flex; flex-direction: column; gap: 0; }
+  .mailrow {
+    display: grid;
+    grid-template-columns: 92px auto 1fr;
+    gap: 12px;
+    align-items: baseline;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12.5px;
+  }
+  .mailrow:last-child { border-bottom: none; }
+  .mailrow .maildate { color: var(--text-muted); font-family: var(--font-mono); font-size: 11.5px; white-space: nowrap; }
+  .mailrow .mailhandle { font-family: var(--font-mono); }
+  .mailrow .mailhandle a { color: var(--text); text-decoration: none; }
+  .mailrow .mailhandle a:hover { color: var(--accent); text-decoration: underline; }
+  .mailrow .mailreason { color: var(--text-muted); }
+  .mailempty { font-size: 12.5px; color: var(--text-muted); padding: 4px 0; }
+
+  /* tabs */
+  .tabbar {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tabbtn {
+    appearance: none;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 10px 4px;
+    margin-bottom: -1px;
+    font-family: var(--font-body);
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .tabbtn + .tabbtn { margin-left: 18px; }
+  .tabbtn:hover { color: var(--text); }
+  .tabbtn.active { color: var(--text); border-bottom-color: var(--accent); }
+  .tabbtn .badge {
+    background: var(--surface-2);
+    color: var(--text-muted);
+    border-radius: 999px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    padding: 1px 7px;
+  }
+  .tabbtn.active .badge { background: var(--accent-soft); color: var(--accent); }
+  .tabbtn .badge.crit { background: var(--crit-soft); color: var(--crit); }
+  .panel { display: flex; flex-direction: column; gap: 20px; }
+  .panel[hidden] { display: none; }
+</style>
+
+<div class="wrap">
+  <div class="head">
+    <div>
+      <h1>twiauto Fleet Status</h1>
+      <div class="sub">twi-autoV2 データベース群のシャドウバン/凍結チェック結果</div>
+    </div>
+    <div class="meta">
+      対象アカウント <strong id="metaTotal">–</strong> 件 ・ システム <strong id="metaSystems">–</strong> 個
+      <div class="status-line" id="statusLine"></div>
+    </div>
+  </div>
+
+  <div class="banner" id="banner" hidden>
+    <span class="icon">⚠️</span>
+    <div class="msg">
+      <div id="bannerText"></div>
+      <span class="req-note" id="reqNote"></span>
+    </div>
+    <button id="recheckBtn">再チェックをリクエスト</button>
+  </div>
+
+  <div class="tabbar" id="tabbar">
+    <button class="tabbtn active" data-tab="accounts" id="tabBtnAccounts">📊 アカウント状況 <span class="badge" id="tabBadgeAccounts"></span></button>
+    <button class="tabbtn" data-tab="mail" id="tabBtnMail">✉️ メール <span class="badge" id="tabBadgeMail"></span></button>
+    <button class="tabbtn" data-tab="backup" id="tabBtnBackup">💾 DBバックアップ <span class="badge" id="tabBadgeBackup"></span></button>
+    <button class="tabbtn" data-tab="amazon" id="tabBtnAmazon">🛒 Amazon売上 <span class="badge" id="tabBadgeAmazon"></span></button>
+  </div>
+
+  <div class="panel" id="panel-accounts">
+    <div class="kpis" id="kpiRow"></div>
+
+    <div class="dist">
+      <div class="titlerow">
+        <div class="title">判定の内訳</div>
+        <div class="titlerow-right">
+          <span class="sb-req-note" id="sbReqNote"></span>
+          <button class="refresh-btn" id="sbCheckBtn"><span class="refresh-icon">⟳</span> シャドウバンチェック</button>
+        </div>
+      </div>
+      <div class="dist-bar" id="distBar"></div>
+      <div class="dist-legend" id="distLegend"></div>
+    </div>
+
+    <div class="toolbar">
+      <input type="search" id="q" placeholder="アカウント名・ジャンル・詳細を検索…">
+      <select id="sysFilter"><option value="">すべてのシステム</option></select>
+      <button class="reset" id="resetBtn">絞り込み解除</button>
+      <span class="count-note"><strong id="shownCount">–</strong> / <span id="totalCount">–</span> 件を表示</span>
+    </div>
+
+    <div class="table-card">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th data-key="handle">Xアカウント <span class="arrow">▲</span></th>
+              <th data-key="display">表示名 <span class="arrow">▲</span></th>
+              <th data-key="genre">ジャンル <span class="arrow">▲</span></th>
+              <th data-key="system">システム名 <span class="arrow">▲</span></th>
+              <th data-key="judgement">判定 <span class="arrow">▲</span></th>
+              <th data-key="checked_at">チェック日時 <span class="arrow">▲</span></th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-mail" hidden>
+    <div class="mailcard">
+      <div class="mailhead">
+        <h2>✉️ Xサポートからのメール（Gmail連携）</h2>
+        <div class="mailhead-right">
+          <div class="mailmeta" id="mailMeta"></div>
+          <button class="refresh-btn" id="mailRefreshBtn"><span class="refresh-icon">⟳</span> 更新</button>
+        </div>
+      </div>
+      <div class="mail-req-note" id="mailReqNote"></div>
+      <div class="maillist" id="mailList"></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-backup" hidden>
+    <div class="mailcard">
+      <div class="mailhead">
+        <h2>💾 DBバックアップ（\\NAS-HOST → ローカル）</h2>
+        <div class="mailhead-right">
+          <div class="mailmeta" id="backupMeta"></div>
+          <button class="refresh-btn" id="backupBtn"><span class="refresh-icon">⟳</span> バックアップする</button>
+        </div>
+      </div>
+      <div class="mail-req-note" id="backupReqNote"></div>
+      <div class="table-card" style="margin-top:4px;">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>システム名</th>
+                <th>最新バックアップ日時</th>
+                <th>サイズ</th>
+                <th>AmazonトラッキングID</th>
+                <th>状態</th>
+              </tr>
+            </thead>
+            <tbody id="backupRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-amazon" hidden>
+    <div class="mailcard">
+      <div class="mailhead">
+        <h2>🛒 Amazonアソシエイト売上（トラッキングID単位）</h2>
+        <div class="mailhead-right">
+          <div class="mailmeta" id="amazonMeta"></div>
+          <button class="refresh-btn" id="amazonBtn"><span class="refresh-icon">⟳</span> Amazon取得</button>
+        </div>
+      </div>
+      <div class="mail-req-note" id="amazonReqNote"></div>
+      <div class="mail-req-note">Amazon側の仕様により、注文数・クリック数などが一定数に満たない場合、紹介料などの数値は個別には表示されません（「—」表示）。トラッキングID単位で見る場合は特に発生しやすいのでご注意ください。</div>
+      <div class="tabbar" id="amazonPeriodBar" style="border-bottom:1px solid var(--border); margin-top:4px;">
+        <button class="tabbtn active" data-period="month" id="amazonBtnMonth">月次</button>
+        <button class="tabbtn" data-period="day" id="amazonBtnDay">日次</button>
+      </div>
+      <div class="table-card" style="margin-top:10px;" id="amazonMonthCard">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>トラッキングID</th>
+                <th>クリック数</th>
+                <th>注文数</th>
+                <th>注文商品売上</th>
+                <th>紹介料</th>
+                <th class="xcol">Xアカウント数</th>
+                <th>投稿数</th>
+              </tr>
+            </thead>
+            <tbody id="amazonMonthRows"></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="amazonDayCard" hidden>
+        <div class="toolbar" style="margin-top:2px;">
+          <select id="amazonTrackingSelect" style="min-width:220px;"></select>
+          <span class="mail-req-note" id="amazonDayNote" style="margin-top:0;"></span>
+        </div>
+        <div class="table-card" style="margin-top:10px;">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>日付</th>
+                  <th>Amazonクリック数</th>
+                  <th>注文数</th>
+                  <th>注文商品売上</th>
+                  <th>紹介料</th>
+                  <th class="xcol">Xアカウント数</th>
+                  <th class="xcol">X投稿数</th>
+                  <th class="xcol">X表示回数</th>
+                  <th class="xcol">Xクリック数</th>
+                  <th class="xcol">CTR</th>
+                </tr>
+              </thead>
+              <tbody id="amazonDayRows"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const DATA = __DATA_JSON__;
+const STATUS = __STATUS_JSON__;
+const MAIL = __MAIL_JSON__;
+const BACKUP = __BACKUP_JSON__;
+const AMAZON = __AMAZON_JSON__;
+
+function severityOf(j) {
+  if (j.includes('高い')) return 'susp-high';
+  if (j.includes('シャドウバン')) return 'susp';
+  if (j.includes('凍結') || j.includes('消滅')) return 'crit';
+  if (j.includes('要')) return 'warn';
+  if (j.includes('取得失敗') || j === '未チェック') return 'warn';
+  if (j.includes('一部項目')) return 'ok-partial';
+  if (j === '異常なし') return 'ok';
+  return 'warn';
+}
+const SEVERITY_META = {
+  'ok':         { pill: 'ok',   color: 'var(--ok)',   label: '異常なし' },
+  'ok-partial': { pill: 'ok',   color: 'var(--ok)',   label: '異常なし(一部判定不能)' },
+  'warn':       { pill: 'warn', color: 'var(--warn)', label: '要再確認/未チェック' },
+  'susp':       { pill: 'susp', color: 'var(--susp)', label: 'シャドウバンの疑いあり' },
+  'susp-high':  { pill: 'susp', color: 'var(--susp)', label: 'シャドウバンの疑いが高い' },
+  'crit':       { pill: 'crit', color: 'var(--crit)', label: '凍結/消滅' },
+};
+DATA.forEach(d => { d._sev = severityOf(d.judgement); });
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const dt = new Date(iso);
+  if (isNaN(dt)) return iso;
+  return dt.toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+
+// --- mail alerts panel ---
+(function renderMail() {
+  const mailMeta = document.getElementById('mailMeta');
+  const mailList = document.getElementById('mailList');
+  const total = MAIL.records.length;
+  const shown = [...MAIL.records].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10);
+
+  mailMeta.innerHTML = `${MAIL.account} ・ 全期間(迷惑メール含む)を検索 ・ 検出 <strong>${total}</strong>件 ・ 既読処理済み ・ 最終確認 <strong>${fmtDate(MAIL.lastCheckedAt)}</strong>`;
+
+  if (!shown.length) {
+    mailList.innerHTML = `<div class="mailempty">ロック・凍結に該当するメールは見つかりませんでした。</div>`;
+    return;
+  }
+
+  mailList.innerHTML = shown.map(m => {
+    const isCrit = m.status.includes('凍結');
+    const pillClass = isCrit ? 'crit' : 'warn';
+    return `
+    <div class="mailrow">
+      <span class="maildate">${fmtDate(m.date)}</span>
+      <span class="mailhandle"><span class="pill ${pillClass}"><span class="stripe"></span>${m.status}</span> <a href="https://x.com/${m.handle}" target="_blank" rel="noopener">@${m.handle}</a></span>
+      <span class="mailreason">${m.reason}</span>
+    </div>`;
+  }).join('');
+
+  if (total > shown.length) {
+    mailList.innerHTML += `<div class="mailempty">他 ${total - shown.length}件（直近10件のみ表示）</div>`;
+  }
+})();
+
+// --- backup panel ---
+(function renderBackup() {
+  const meta = document.getElementById('backupMeta');
+  const rows = document.getElementById('backupRows');
+  const okCount = BACKUP.filter(b => b.ok).length;
+  const latest = BACKUP.reduce((max, b) => (b.backedUpAt && b.backedUpAt > (max || '')) ? b.backedUpAt : max, null);
+
+  meta.innerHTML = `${okCount}/${BACKUP.length} システム成功 ・ 最終実行 <strong>${fmtDate(latest)}</strong>`;
+
+  rows.innerHTML = BACKUP.map(b => {
+    const sizeMb = b.bytes ? (b.bytes / 1e6).toFixed(1) + ' MB' : '—';
+    const statusPill = b.ok
+      ? `<span class="pill ok"><span class="stripe"></span>成功</span>`
+      : `<span class="pill crit"><span class="stripe"></span>失敗: ${b.error || '不明なエラー'}</span>`;
+    return `
+    <tr>
+      <td class="sysname">${b.system}</td>
+      <td class="checked-at">${fmtDate(b.backedUpAt)}</td>
+      <td class="muted">${sizeMb}</td>
+      <td class="muted">${(b.trackings && b.trackings.length) ? b.trackings.join(', ') : '—'}</td>
+      <td>${statusPill}</td>
+    </tr>`;
+  }).join('');
+})();
+
+// --- amazon panel ---
+(function renderAmazon() {
+  const meta = document.getElementById('amazonMeta');
+  const monthCard = document.getElementById('amazonMonthCard');
+  const dayCard = document.getElementById('amazonDayCard');
+  const monthRows = document.getElementById('amazonMonthRows');
+  const dayRows = document.getElementById('amazonDayRows');
+  const btnMonth = document.getElementById('amazonBtnMonth');
+  const btnDay = document.getElementById('amazonBtnDay');
+  const yen = n => '¥' + Number(n || 0).toLocaleString('ja-JP');
+  const num = n => Number(n || 0).toLocaleString('ja-JP');
+
+  meta.innerHTML = `Amazon実績期間: <strong>${AMAZON.amazonPeriod.label}(${AMAZON.amazonPeriod.start}〜${AMAZON.amazonPeriod.end})</strong> ・ 最終更新 <strong>${fmtDate(AMAZON.amazonLastUpdated)}</strong>`;
+
+  // --- monthly table (per tracking ID, + total row) ---
+  const sortedMonth = [...AMAZON.rows].sort((a, b) => b.referralFee - a.referralFee);
+  monthRows.innerHTML = sortedMonth.map(r => `
+    <tr>
+      <td class="handle">${r.tracking}</td>
+      <td class="muted">${num(r.clicks)}</td>
+      <td class="muted">${num(r.orders)}</td>
+      <td class="muted">${yen(r.orderedSales)}</td>
+      <td class="muted">${yen(r.referralFee)}</td>
+      <td class="muted xcol">${r.accountCount}</td>
+      <td class="muted">${num(r.postsMonth)}</td>
+    </tr>`).join('');
+  const mTotal = AMAZON.rows.reduce((acc, r) => {
+    acc.clicks += r.clicks; acc.orders += r.orders; acc.orderedSales += r.orderedSales;
+    acc.referralFee += r.referralFee; acc.accountCount += r.accountCount; acc.postsMonth += r.postsMonth;
+    return acc;
+  }, { clicks: 0, orders: 0, orderedSales: 0, referralFee: 0, accountCount: 0, postsMonth: 0 });
+  monthRows.innerHTML += `
+    <tr style="font-weight:600;">
+      <td class="handle">合計</td>
+      <td class="muted">${num(mTotal.clicks)}</td>
+      <td class="muted">${num(mTotal.orders)}</td>
+      <td class="muted">${yen(mTotal.orderedSales)}</td>
+      <td class="muted">${yen(mTotal.referralFee)}</td>
+      <td class="muted xcol">${mTotal.accountCount}</td>
+      <td class="muted">${num(mTotal.postsMonth)}</td>
+    </tr>`;
+
+  // --- daily table: select a tracking ID (or 合計 = all combined), show its date-by-date breakdown ---
+  const trackSelect = document.getElementById('amazonTrackingSelect');
+  const dayNote = document.getElementById('amazonDayNote');
+  const dailyByTracking = AMAZON.dailyByTracking || {};
+  const accountCountByTracking = AMAZON.accountCountByTracking || {};
+  const trackingIds = Object.keys(dailyByTracking);
+
+  const optAll = document.createElement('option');
+  optAll.value = '__ALL__'; optAll.textContent = '合計（全トラッキングID）';
+  trackSelect.appendChild(optAll);
+  trackingIds.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t; opt.textContent = t;
+    trackSelect.appendChild(opt);
+  });
+
+  function rowsForAll() {
+    // sum every tracking ID's rows onto shared dates
+    const byDate = {};
+    trackingIds.forEach(t => {
+      (dailyByTracking[t] || []).forEach(r => {
+        const acc = byDate[r.date] || (byDate[r.date] = { date: r.date, clicks: 0, orders: 0, orderedSales: 0, referralFee: 0, posts: 0, xClicks: 0, xViews: 0 });
+        acc.clicks += r.clicks; acc.orders += r.orders; acc.orderedSales += r.orderedSales;
+        acc.referralFee += r.referralFee; acc.posts += r.posts; acc.xClicks += (r.xClicks || 0); acc.xViews += (r.xViews || 0);
+      });
+    });
+    return Object.values(byDate);
+  }
+
+  function renderDaily(trackingId) {
+    const isAll = trackingId === '__ALL__';
+    // for "合計" use Amazon's own 全トラッキングID×日付 report directly (AMAZON.dailyAllTracking) --
+    // this has no per-tracking suppression, so daily rows add up exactly to the monthly total.
+    const rows = (isAll ? (AMAZON.dailyAllTracking || rowsForAll()) : (dailyByTracking[trackingId] || [])).slice()
+      .sort((a, b) => b.date.localeCompare(a.date));
+    const accountCount = isAll
+      ? (AMAZON.totalAccountCount || trackingIds.reduce((s, t) => s + (accountCountByTracking[t] || 0), 0))
+      : (accountCountByTracking[trackingId] || 0);
+
+    const ctrOf = (clicks, views) => (views > 0) ? ((clicks / views) * 100).toFixed(2) + '%' : '-';
+
+    dayRows.innerHTML = rows.map(r => {
+      const hasX = (r.posts || 0) > 0;
+      return `
+      <tr>
+        <td class="checked-at">${r.date}</td>
+        <td class="muted">${num(r.clicks)}</td>
+        <td class="muted">${num(r.orders)}</td>
+        <td class="muted">${yen(r.orderedSales)}</td>
+        <td class="muted">${(r.referralFee === null || r.referralFee === undefined) ? '—' : yen(r.referralFee)}</td>
+        <td class="muted xcol">${accountCount}</td>
+        <td class="muted xcol">${hasX ? num(r.posts) : '—'}</td>
+        <td class="muted xcol">${hasX ? num(r.xViews) : '—'}</td>
+        <td class="muted xcol">${hasX ? num(r.xClicks) : '—'}</td>
+        <td class="muted xcol">${ctrOf(r.xClicks, r.xViews)}</td>
+      </tr>`;
+    }).join('');
+
+    const total = rows.reduce((acc, r) => {
+      acc.clicks += r.clicks; acc.orders += r.orders; acc.orderedSales += r.orderedSales;
+      acc.referralFee += r.referralFee; acc.posts += r.posts; acc.xClicks += (r.xClicks || 0); acc.xViews += (r.xViews || 0);
+      return acc;
+    }, { clicks: 0, orders: 0, orderedSales: 0, referralFee: 0, posts: 0, xClicks: 0, xViews: 0 });
+    dayRows.innerHTML += `
+      <tr style="font-weight:600;">
+        <td class="checked-at">合計</td>
+        <td class="muted">${num(total.clicks)}</td>
+        <td class="muted">${num(total.orders)}</td>
+        <td class="muted">${yen(total.orderedSales)}</td>
+        <td class="muted">${yen(total.referralFee)}</td>
+        <td class="muted xcol">${accountCount}</td>
+        <td class="muted xcol">${num(total.posts)}</td>
+        <td class="muted xcol">${num(total.xViews)}</td>
+        <td class="muted xcol">${num(total.xClicks)}</td>
+        <td class="muted xcol">${ctrOf(total.xClicks, total.xViews)}</td>
+      </tr>`;
+
+    const xClickNote = (AMAZON.xClickUnsupportedSystems && AMAZON.xClickUnsupportedSystems.length)
+      ? ` ／ Xクリック数はDBのスキーマが対応しているシステムのみ計測しています（未対応: ${AMAZON.xClickUnsupportedSystems.join(', ')}）。未対応システムの投稿分はXクリック数に含まれません。`
+      : '';
+    if (!isAll) {
+      const mt = (AMAZON.monthlyTotalsByTracking || {})[trackingId];
+      if (mt) {
+        dayNote.textContent = `参考: Amazon側の月次紹介料合計は ¥${num(mt.referralFee)}（紹介料が「—」の日はAmazon側が個別表示を非公開にしており、未確定・非0の可能性があります。実際の金額は不明なため合計行にも含まれていません）${xClickNote}`;
+      } else {
+        dayNote.textContent = xClickNote;
+      }
+    } else {
+      dayNote.textContent = `Amazon側の「トラッキングID:すべて」×「日付」集計をそのまま使用しているため、日別行の合計は月次合計と一致します（トラッキングID別に見た場合の「—」非公開の影響を受けません）。${xClickNote}`;
+    }
+  }
+
+  trackSelect.addEventListener('change', () => renderDaily(trackSelect.value));
+
+  function activatePeriod(period) {
+    const isDay = period === 'day';
+    btnMonth.classList.toggle('active', !isDay);
+    btnDay.classList.toggle('active', isDay);
+    monthCard.hidden = isDay;
+    dayCard.hidden = !isDay;
+    if (isDay) renderDaily(trackSelect.value);
+  }
+  btnMonth.addEventListener('click', () => activatePeriod('month'));
+  btnDay.addEventListener('click', () => activatePeriod('day'));
+  activatePeriod('month');
+})();
+
+// --- tabs ---
+(function initTabs() {
+  const panels = { accounts: document.getElementById('panel-accounts'), mail: document.getElementById('panel-mail'), backup: document.getElementById('panel-backup'), amazon: document.getElementById('panel-amazon') };
+  const buttons = { accounts: document.getElementById('tabBtnAccounts'), mail: document.getElementById('tabBtnMail'), backup: document.getElementById('tabBtnBackup'), amazon: document.getElementById('tabBtnAmazon') };
+
+  document.getElementById('tabBadgeAccounts').textContent = DATA.length;
+  const critMailCount = MAIL.records.filter(m => m.status.includes('凍結')).length;
+  const badgeMail = document.getElementById('tabBadgeMail');
+  badgeMail.textContent = MAIL.records.length;
+  if (critMailCount > 0) badgeMail.classList.add('crit');
+
+  const badgeBackup = document.getElementById('tabBadgeBackup');
+  const backupFailCount = BACKUP.filter(b => !b.ok).length;
+  badgeBackup.textContent = BACKUP.length;
+  if (backupFailCount > 0) badgeBackup.classList.add('crit');
+
+  document.getElementById('tabBadgeAmazon').textContent = AMAZON.rows.length;
+
+  function activate(tab) {
+    Object.keys(panels).forEach(k => { panels[k].hidden = (k !== tab); });
+    Object.keys(buttons).forEach(k => buttons[k].classList.toggle('active', k === tab));
+    try { localStorage.setItem('fleetStatusTab', tab); } catch (e) {}
+  }
+
+  Object.keys(buttons).forEach(k => buttons[k].addEventListener('click', () => activate(k)));
+
+  let initial = 'accounts';
+  try {
+    const saved = localStorage.getItem('fleetStatusTab');
+    if (saved === 'accounts' || saved === 'mail' || saved === 'backup' || saved === 'amazon') initial = saved;
+  } catch (e) {}
+  activate(initial);
+})();
+
+const sysSet = [...new Set(DATA.map(d => d.system))].sort();
+document.getElementById('metaTotal').textContent = DATA.length;
+document.getElementById('metaSystems').textContent = sysSet.length;
+document.getElementById('totalCount').textContent = DATA.length;
+
+const sysSelect = document.getElementById('sysFilter');
+sysSet.forEach(s => {
+  const opt = document.createElement('option');
+  opt.value = s; opt.textContent = s;
+  sysSelect.appendChild(opt);
+});
+
+// --- status line + banner ---
+const statusLine = document.getElementById('statusLine');
+const banner = document.getElementById('banner');
+const bannerText = document.getElementById('bannerText');
+const recheckBtn = document.getElementById('recheckBtn');
+const reqNote = document.getElementById('reqNote');
+
+// このダッシュボードは30分おきに20件ずつ裏で再チェックが回り続ける「常時ローリング」方式のため、
+// 全件が過去に一度でもチェック済みだと uncheckedCount は常に0になる。「完了」表示は誤解を招くので、
+// 直近24時間以内に再チェックされた件数を進捗として常に表示する。
+const DAY_MS = 24 * 60 * 60 * 1000;
+const now = Date.now();
+const freshCount = DATA.filter(d => {
+  if (!d.checked_at) return false;
+  const t = new Date(d.checked_at).getTime();
+  return !isNaN(t) && (now - t) <= DAY_MS;
+}).length;
+const freshTotal = new Set(DATA.map(d => d.handle)).size;
+
+if (STATUS.uncheckedCount > 0 || !STATUS.siteAvailable) {
+  statusLine.textContent = `最終実行: ${fmtDate(STATUS.finishedAt)}（未チェック ${STATUS.uncheckedCount} 件 ・ 24時間以内に再チェック済み ${freshCount}/${freshTotal} 件）`;
+  statusLine.classList.add('warn');
+  banner.hidden = false;
+  banner.classList.toggle('crit', !STATUS.siteAvailable);
+  bannerText.textContent = !STATUS.siteAvailable
+    ? `シャドウバンチェックのサイトに接続できませんでした。数時間おいてから再実行してください。未チェックの${STATUS.uncheckedCount}件から再開します。`
+    : `${STATUS.uncheckedCount}件がまだチェックされていません。`;
+} else {
+  statusLine.textContent = `最新チェック: ${fmtDate(STATUS.finishedAt)} ・ 24時間以内に再チェック済み ${freshCount}/${freshTotal} 件（30分おきに20件ずつローリング更新中）`;
+  statusLine.classList.add('ok');
+}
+
+const mailRefreshBtn = document.getElementById('mailRefreshBtn');
+const mailReqNote = document.getElementById('mailReqNote');
+const backupBtn = document.getElementById('backupBtn');
+const backupReqNote = document.getElementById('backupReqNote');
+const amazonBtn = document.getElementById('amazonBtn');
+const amazonReqNote = document.getElementById('amazonReqNote');
+const sbCheckBtn = document.getElementById('sbCheckBtn');
+const sbReqNote = document.getElementById('sbReqNote');
+
+async function initDb() {
+  if (!(window.claude && window.claude.use)) return;
+  const db = await window.claude.use('db');
+  if (!db) return;
+
+  async function refreshShadowbanReqNote() {
+    try {
+      const snap = await db.doc('state/recheck_request').get();
+      if (snap.exists) {
+        const data = snap.data();
+        const text = `前回のリクエスト: ${fmtDate(data.requestedAt)}（Claudeに「シャドウバンチェックして」と伝えてください）`;
+        reqNote.textContent = text;
+        sbReqNote.textContent = text;
+      }
+    } catch (e) { /* db unavailable in this view -- button still records nothing, degrade quietly */ }
+  }
+  await refreshShadowbanReqNote();
+
+  async function requestShadowbanCheck(btn) {
+    btn.disabled = true;
+    btn.classList.add('spinning');
+    const nowIso = new Date().toISOString();
+    try {
+      await db.doc('state/recheck_request').set({ requestedAt: nowIso });
+      const text = `リクエストを記録しました（${fmtDate(nowIso)}）。Claudeに「シャドウバンチェックして」と伝えてください。`;
+      reqNote.textContent = text;
+      sbReqNote.textContent = text;
+    } catch (e) {
+      const text = 'リクエストの記録に失敗しました。時間をおいて再度お試しください。';
+      reqNote.textContent = text;
+      sbReqNote.textContent = text;
+    }
+    btn.disabled = false;
+    btn.classList.remove('spinning');
+  }
+
+  recheckBtn.addEventListener('click', () => requestShadowbanCheck(recheckBtn));
+  sbCheckBtn.addEventListener('click', () => requestShadowbanCheck(sbCheckBtn));
+
+  try {
+    const snap = await db.doc('state/mail_recheck_request').get();
+    if (snap.exists) {
+      const data = snap.data();
+      mailReqNote.textContent = `前回のリクエスト: ${fmtDate(data.requestedAt)}（Claudeに「Gmailを再チェックして」と伝えてください）`;
+    }
+  } catch (e) { /* degrade quietly */ }
+
+  mailRefreshBtn.addEventListener('click', async () => {
+    mailRefreshBtn.disabled = true;
+    mailRefreshBtn.classList.add('spinning');
+    const nowIso = new Date().toISOString();
+    try {
+      await db.doc('state/mail_recheck_request').set({ requestedAt: nowIso });
+      mailReqNote.textContent = `リクエストを記録しました（${fmtDate(nowIso)}）。Claudeに「Gmailを再チェックして」と伝えてください。`;
+    } catch (e) {
+      mailReqNote.textContent = 'リクエストの記録に失敗しました。時間をおいて再度お試しください。';
+    }
+    mailRefreshBtn.disabled = false;
+    mailRefreshBtn.classList.remove('spinning');
+  });
+
+  try {
+    const snap = await db.doc('state/db_backup_request').get();
+    if (snap.exists) {
+      const data = snap.data();
+      backupReqNote.textContent = `前回のリクエスト: ${fmtDate(data.requestedAt)}（Claudeに「DBバックアップして」と伝えてください）`;
+    }
+  } catch (e) { /* degrade quietly */ }
+
+  backupBtn.addEventListener('click', async () => {
+    backupBtn.disabled = true;
+    backupBtn.classList.add('spinning');
+    const nowIso = new Date().toISOString();
+    try {
+      await db.doc('state/db_backup_request').set({ requestedAt: nowIso });
+      backupReqNote.textContent = `リクエストを記録しました（${fmtDate(nowIso)}）。Claudeに「DBバックアップして」と伝えてください。`;
+    } catch (e) {
+      backupReqNote.textContent = 'リクエストの記録に失敗しました。時間をおいて再度お試しください。';
+    }
+    backupBtn.disabled = false;
+    backupBtn.classList.remove('spinning');
+  });
+
+  try {
+    const snap = await db.doc('state/amazon_fetch_request').get();
+    if (snap.exists) {
+      const data = snap.data();
+      amazonReqNote.textContent = `前回のリクエスト: ${fmtDate(data.requestedAt)}（Claudeに「Amazon売上を取得して」と伝えてください）`;
+    }
+  } catch (e) { /* degrade quietly */ }
+
+  amazonBtn.addEventListener('click', async () => {
+    amazonBtn.disabled = true;
+    amazonBtn.classList.add('spinning');
+    const nowIso = new Date().toISOString();
+    try {
+      await db.doc('state/amazon_fetch_request').set({ requestedAt: nowIso });
+      amazonReqNote.textContent = `リクエストを記録しました（${fmtDate(nowIso)}）。Claudeに「Amazon売上を取得して」と伝えてください。`;
+    } catch (e) {
+      amazonReqNote.textContent = 'リクエストの記録に失敗しました。時間をおいて再度お試しください。';
+    }
+    amazonBtn.disabled = false;
+    amazonBtn.classList.remove('spinning');
+  });
+}
+initDb();
+
+// --- KPI tiles ---
+const order = ['ok-partial','ok','warn','susp','susp-high','crit'];
+const counts = {};
+DATA.forEach(d => { counts[d._sev] = (counts[d._sev]||0) + 1; });
+
+const kpiRow = document.getElementById('kpiRow');
+let activeSev = null;
+
+function makeKpi(sev, label, count, color) {
+  const el = document.createElement('div');
+  el.className = 'kpi';
+  el.style.setProperty('--kpi-c', color);
+  el.innerHTML = `<div class="num">${count}</div><div class="lbl">${label}</div>`;
+  el.addEventListener('click', () => {
+    activeSev = (activeSev === sev) ? null : sev;
+    document.querySelectorAll('.kpi').forEach(k => k.classList.remove('active'));
+    if (activeSev) el.classList.add('active');
+    render();
+  });
+  return el;
+}
+kpiRow.appendChild(makeKpi(null, '対象アカウント合計', DATA.length, 'var(--accent)'));
+order.forEach(sev => {
+  if (!counts[sev]) return;
+  const meta = SEVERITY_META[sev];
+  kpiRow.appendChild(makeKpi(sev, meta.label, counts[sev], meta.color));
+});
+
+// --- distribution bar ---
+const distBar = document.getElementById('distBar');
+const distLegend = document.getElementById('distLegend');
+order.forEach(sev => {
+  if (!counts[sev]) return;
+  const meta = SEVERITY_META[sev];
+  const pct = (counts[sev] / DATA.length * 100);
+  const seg = document.createElement('span');
+  seg.style.width = pct + '%';
+  seg.style.background = meta.color;
+  seg.title = `${meta.label}: ${counts[sev]}件 (${pct.toFixed(1)}%)`;
+  distBar.appendChild(seg);
+  const item = document.createElement('span');
+  item.innerHTML = `<span class="dot" style="background:${meta.color}"></span>${meta.label}（${counts[sev]}）`;
+  distLegend.appendChild(item);
+});
+
+// --- table ---
+const rowsEl = document.getElementById('rows');
+const qInput = document.getElementById('q');
+let sortKey = 'system', sortDir = 1;
+
+function pillHtml(d) {
+  const meta = SEVERITY_META[d._sev];
+  return `<span class="pill ${meta.pill}"><span class="stripe"></span>${d.judgement}</span>`;
+}
+
+function render() {
+  const q = qInput.value.trim().toLowerCase();
+  const sysVal = sysSelect.value;
+
+  let filtered = DATA.filter(d => {
+    if (sysVal && d.system !== sysVal) return false;
+    if (activeSev && d._sev !== activeSev) return false;
+    if (q) {
+      const hay = (d.handle + ' ' + d.display + ' ' + d.genre + ' ' + d.detail + ' ' + d.judgement).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  filtered.sort((a, b) => {
+    let av = a[sortKey] ?? '', bv = b[sortKey] ?? '';
+    return String(av).localeCompare(String(bv), 'ja') * sortDir;
+  });
+
+  document.getElementById('shownCount').textContent = filtered.length;
+
+  if (!filtered.length) {
+    rowsEl.innerHTML = `<tr class="empty-row"><td colspan="6">条件に一致するアカウントはありません</td></tr>`;
+    return;
+  }
+
+  rowsEl.innerHTML = filtered.map((d, i) => `
+    <tr data-i="${i}" class="clickable">
+      <td class="handle"><a href="${d.url}" target="_blank" rel="noopener">@${d.handle}</a></td>
+      <td class="muted">${d.display || '—'}</td>
+      <td class="muted">${d.genre || '—'}</td>
+      <td class="sysname">${d.system}</td>
+      <td>${pillHtml(d)}</td>
+      <td class="checked-at">${fmtDate(d.checked_at)}</td>
+    </tr>
+    <tr class="detail-row hidden-row" data-detail-for="${i}"><td colspan="6"><div class="detail-box">${d.detail || '詳細情報はありません'}</div></td></tr>
+  `).join('');
+
+  rowsEl.querySelectorAll('tr.clickable').forEach(tr => {
+    tr.addEventListener('click', (e) => {
+      if (e.target.tagName === 'A') return;
+      const detailRow = rowsEl.querySelector(`tr[data-detail-for="${tr.dataset.i}"]`);
+      detailRow.classList.toggle('hidden-row');
+    });
+  });
+}
+
+document.querySelectorAll('thead th[data-key]').forEach(th => {
+  th.addEventListener('click', () => {
+    const key = th.dataset.key;
+    if (sortKey === key) sortDir *= -1; else { sortKey = key; sortDir = 1; }
+    document.querySelectorAll('thead th').forEach(h => h.classList.remove('sorted'));
+    th.classList.add('sorted');
+    th.querySelector('.arrow').textContent = sortDir === 1 ? '▲' : '▼';
+    render();
+  });
+});
+
+qInput.addEventListener('input', render);
+sysSelect.addEventListener('change', render);
+document.getElementById('resetBtn').addEventListener('click', () => {
+  qInput.value = ''; sysSelect.value = ''; activeSev = null;
+  document.querySelectorAll('.kpi').forEach(k => k.classList.remove('active'));
+  render();
+});
+
+render();
+</script>
